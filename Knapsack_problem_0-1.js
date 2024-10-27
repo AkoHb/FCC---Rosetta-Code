@@ -1,4 +1,5 @@
-const getWeight = arrOfOb => arrOfOb.reduce((t, ob) => ob.hasOwnProperty("weight") ? t + ob.weight : t + 0, 0)
+const getWeight = arrOfOb => arrOfOb.reduce((t, ob) => ob.hasOwnProperty("weight") ? t + ob.weight : t, 0);
+const getValue = arrOfOb => arrOfOb.reduce((t, ob) => t + ob.value , 0);
 
 const isValidData = (items, maxweight) => {
     switch (true) {
@@ -40,39 +41,22 @@ const isValidData = (items, maxweight) => {
     return false
 }
 
-const getValidItems = (arOfObj, w, res = []) => {
-
-    let filtByWeight = [...arOfObj].filter(ob => ob.weight <= w);
-    
-    if (filtByWeight.length <= 1) return filtByWeight
-    
-    for (let i = 0; i < filtByWeight.length - 1; i++){
-        let crArr = [...filtByWeight.slice(0, i), ...filtByWeight.slice(i+1)];
-        for (let k = 0; k < crArr.length; k++) {
-            if (getWeight([filtByWeight[i], crArr[k]]) > w) k++;
-            else {
-                let nWght = w - getWeight([filtByWeight[i], crArr[k]])
-                return res.concat([filtByWeight[i], crArr[k]].concat(getValidItems([...crArr.slice(0, k), ...crArr.slice(k + 1)], nWght)))
-            
-            }
-        }
+const getMaxValue = (arOfObj, w, res = [0],  an = []) => {
+    let filterArByWght = arOfObj.filter(ob => ob.weight <= w);
+    for (let j = 0; j < filterArByWght.length; j++) {
+        let cRes = [...an, filterArByWght[j]];
+        if (getWeight(cRes) <= w && getValue(cRes) > res[0]) res.unshift(getValue(cRes));
+        let newAr = filterArByWght.filter((a, i) => i !== j);
+        if (newAr.some(ob => getWeight([...cRes, ob]) < w)) {
+            getMaxValue(newAr, w, res, cRes);
+        } 
     }
+    return res[0]
 }
 
 const knapsack = (items, maxweight) =>{
-    
     if (isValidData(items, maxweight)) {
-        let res = [];
-        // let sortItemsByVal = items.sort((a, b) => b.value > a.value ? 1 : a.value > b.value ? -1 : 0)
-        // for(let j = 0; j < sortItemsByVal.length -1 ; j++) {
-        //     res.push(getValidItems(sortItemsByVal.slice(j), maxweight));
-        // }
-        res = getValidItems(items, maxweight)
-
-
-        console.log(res)
-        // console.log(res.map(ar => ar.reduce((t, ob) => t + ob.value, 0)).sort((a,b) => b - a));
-        return res.map(ar => ar.reduce((t, ob) => t + ob.value, 0)).sort((a,b) => b - a)[0]
+        return getMaxValue(items, maxweight)
     } else {
         console.log("...Choose list with valid data...")
         return 0;
